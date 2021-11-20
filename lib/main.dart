@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 void main() {
   runApp(MyApp());
@@ -63,10 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Align(
                 alignment: Alignment.center,
-                child: Text(
-                  "13:00",
-                  style: TextStyle(fontSize: 50, color: Colors.black),
-                )),
+                child: Clock(),
+            ),
           ]),
         ),
       ),
@@ -74,20 +75,161 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class Links extends StatelessWidget {
-  const Links({Key? key}) : super(key: key);
+class Clock extends StatefulWidget {
+  @override
+  _ClockState createState() => _ClockState();
+}
+
+class _ClockState extends State<Clock> {
+  String _timeString = "13:00";
+  Timer? _timer;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _timeString = _formatDateTime(DateTime.now());
+    _timer = Timer.periodic(Duration(milliseconds: 100), (timer) {_getTime();});
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _timer!.cancel();
+  }
+
+  void _getTime(){
+    final DateTime now = DateTime.now();
+    final String formattedDatedTime = _formatDateTime(now);
+    setState(() {
+      _timeString = formattedDatedTime;
+    });
+  }
+
+  String _formatDateTime(DateTime dateTime){
+    return DateFormat('HH:mm').format(dateTime);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Text(_timeString, style: TextStyle(fontSize: 100),);
+  }
+}
+
+class Links extends StatefulWidget {
+  const Links({Key? key}) : super(key: key);
+
+  @override
+  _LinksState createState() => _LinksState();
+}
+
+class _LinksState extends State<Links> {
+  bool _showLinks = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
       children: [
-        Text("Links"),
-        Container(width: 10, height: 0),
-        Icon(Icons.search, color: Colors.brown),
+        Visibility(
+          visible: _showLinks,
+          child: GestureDetector(
+            onTap: (){
+              setState(() {
+                _showLinks = !_showLinks;
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.transparent,
+            ),
+          ),
+        ),
+
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                FlatButton(
+                  child: Text("Links", style: TextStyle(color: Colors.brown),),
+                  onPressed: (){
+                    setState(() {
+                      _showLinks = !_showLinks;
+                    });
+                  },
+                  minWidth: 0,
+                ),
+                Container(width: 10, height: 0),
+                Icon(Icons.search, color: Colors.brown),
+              ],
+            ),
+            Visibility(
+              visible: _showLinks,
+              child: LinksBox(),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
+
+class LinksBox extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 110,
+      width: 250,
+      color: Colors.white,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FlatButton(
+            onPressed: (){
+              print("1st button tapped");
+            },
+            child: Row(
+              children: [
+                FaIcon(FontAwesomeIcons.chrome),
+                Container(width: 10,),
+                Text("Chrome Tab"),
+              ],
+            ),
+          ),
+          Container(height: 5,),
+          FlatButton(
+            onPressed: (){
+              print("2nd button tapped");
+            },
+            child: Row(
+              children: [
+                Icon(Icons.apps),
+                Container(width: 10,),
+                Text("Apps"),
+              ],
+            ),
+          ),
+          Container(height: 5,),
+          FlatButton(
+            onPressed: (){
+              print("3rd button tapped");
+            },
+            child: Row(
+              children: [
+                Icon(Icons.add),
+                Container(width: 10,),
+                Text("New Link"),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 class Weather extends StatelessWidget {
   const Weather({Key? key}) : super(key: key);
@@ -356,6 +498,40 @@ class _TodoBoxState extends State<TodoBox> {
   }
 }
 
+void showAlertDialog(BuildContext context, int index) async{
+  List<String> contents = ['Auto Focus','Appey Road'];
+
+  return await showDialog(
+    context: context,
+    builder: (BuildContext context){
+      if(index < 2){
+        return AlertDialog(
+          title: Text("Alert", style: TextStyle(color: Colors.black),),
+          content: Text(contents[index], style: TextStyle(color: Colors.black),),
+          actions: [
+            FlatButton(
+              child: Text("OK"),
+              onPressed: (){
+                Navigator.pop(context, "OK");
+              },
+            ),
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: (){
+                Navigator.pop(context, "Cancel");
+              },
+            ),
+          ],
+        );
+      }
+      else if(index == 2){
+        return AlertDialog();
+      }
+      else return Container();
+    }
+  );
+}
+
 class MoreBox extends StatefulWidget {
   @override
   _MoreBoxState createState() => _MoreBoxState();
@@ -364,6 +540,7 @@ class MoreBox extends StatefulWidget {
 class _MoreBoxState extends State<MoreBox> {
   List<String> moreContent = <String>['Autofocus', 'Add integration', 'Setting'];
   double _settingHeight = 30, _settingWidth = 110, _paddingSize = 5;
+  int touchedIndex = 0;
 
 
   @override
@@ -390,6 +567,8 @@ class _MoreBoxState extends State<MoreBox> {
                 ),
                 onTap: (){
                   print(index);
+                  touchedIndex = index;
+                  showAlertDialog(context, touchedIndex);
                 },
               ),
             );
